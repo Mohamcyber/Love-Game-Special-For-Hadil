@@ -1,0 +1,115 @@
+from textwrap import dedent
+
+html = dedent(r"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Love Game</title>
+<style>
+body{margin:0;background:#0f380f;font-family:monospace;color:#9bbc0f;display:flex;justify-content:center;align-items:center;height:100vh}
+#game{width:800px;height:400px;background:#306230;border:8px solid #9bbc0f;position:relative;overflow:hidden}
+#credit{position:absolute;top:8px;right:10px;font-size:12px}
+#ground{position:absolute;bottom:60px;width:100%;height:4px;background:#9bbc0f}
+#player{position:absolute;left:70px;bottom:64px;font-size:40px}
+.obs{position:absolute;bottom:64px;font-size:24px}
+#hud{position:absolute;left:10px;top:10px}
+#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(15,56,15,.9);padding:30px}
+.hidden{display:none!important}
+#letter{position:absolute;inset:25px;background:#e8f8c8;color:#203820;border:4px solid #203820;padding:18px;overflow:auto}
+#hearts{position:absolute;inset:0;pointer-events:none}
+.heart{position:absolute;animation:fall 4s linear forwards}
+@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(430px)}}
+</style>
+</head>
+<body>
+<div id="game">
+<div id="credit">made by mo, the love of your life ❤️</div>
+<div id="hud">Obstacles: <span id="count">0</span>/3</div>
+<div id="ground"></div>
+<div id="player">👰</div>
+<div id="hearts"></div>
+<div id="msg">Press <b>SPACE</b> to start.<br><br>Jump over: 💸 Loans, 😔 Stress, 🌧 Bad Days.</div>
+<div id="letter" class="hidden">
+<h2>💍 You caught him!</h2>
+<p>He smiles, places a wedding ring in your hand, and gives you a letter.</p>
+<p><b>My love,</b></p>
+<p>I know life has felt heavy lately. The loans, the stress, and the endless thoughts can make every day feel harder than it should.</p>
+<p>But just like you jumped over every obstacle in this little game, you'll get through these too. They are challenges, not your future.</p>
+<p>You are loved, you are stronger than you realize, and you never have to face any of this alone.</p>
+<p>One day we'll look back on these difficult moments and be grateful we kept moving forward together.</p>
+<p><b>I love you endlessly.</b></p>
+<p>Forever yours,<br><b>Mo ❤️</b></p>
+</div>
+</div>
+<script>
+const game=document.getElementById('game'),player=document.getElementById('player'),msg=document.getElementById('msg');
+const hearts=document.getElementById('hearts'),letter=document.getElementById('letter');
+let started=false,jumping=false,vy=0,y=64,count=0,won=false;
+const labels=["💸 Loans","😔 Stress","🌧 Bad Days"];
+let obs=null;
+function spawn(){
+ if(count>=3)return;
+ obs=document.createElement('div');obs.className='obs';obs.textContent=labels[count];
+ obs.style.left='760px';game.appendChild(obs);
+}
+function jump(){if(!jumping){jumping=true;vy=13;}}
+function endWin(){
+ won=true;
+ if(obs)obs.remove();
+ msg.classList.remove('hidden');
+ msg.innerHTML="🏃‍♂️ A mysterious man appears holding 💍 and 💌... She catches him!";
+ setTimeout(()=>{
+   msg.classList.add('hidden');
+   letter.classList.remove('hidden');
+   for(let i=0;i<60;i++){
+      let h=document.createElement('div');
+      h.className='heart';h.textContent='💖';
+      h.style.left=(Math.random()*760)+'px';
+      h.style.animationDelay=(Math.random()*2)+'s';
+      hearts.appendChild(h);
+   }
+ },1800);
+}
+document.addEventListener('keydown',e=>{
+ if(e.code==="Space"){
+   e.preventDefault();
+   if(!started){started=true;msg.classList.add('hidden');spawn();}
+   else if(!won)jump();
+ }
+});
+function loop(){
+ requestAnimationFrame(loop);
+ if(!started||won)return;
+ if(jumping){
+   y+=vy;vy-=0.7;
+   if(y<=64){y=64;jumping=false;vy=0;}
+   player.style.bottom=y+"px";
+ }
+ if(obs){
+   let x=parseFloat(obs.style.left);x-=5;obs.style.left=x+"px";
+   if(x<110&&x>50&&y<95){
+      started=false;
+      msg.classList.remove('hidden');
+      msg.innerHTML="💚 Bad days happen...<br><br>Press SPACE to try again.";
+      if(obs)obs.remove();obs=null;count=0;document.getElementById('count').textContent=0;
+      y=64;player.style.bottom="64px";
+      return;
+   }
+   if(x<-120){
+      obs.remove();obs=null;
+      count++;document.getElementById('count').textContent=count;
+      if(count===3) endWin(); else spawn();
+   }
+ }
+}
+loop();
+</script>
+</body>
+</html>
+""")
+
+path="/mnt/data/love-game.html"
+with open(path,"w",encoding="utf-8") as f:
+    f.write(html)
+print(path)
