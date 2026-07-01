@@ -1,115 +1,445 @@
-from textwrap import dedent
 
-html = dedent(r"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Love Game</title>
-<style>
-body{margin:0;background:#0f380f;font-family:monospace;color:#9bbc0f;display:flex;justify-content:center;align-items:center;height:100vh}
-#game{width:800px;height:400px;background:#306230;border:8px solid #9bbc0f;position:relative;overflow:hidden}
-#credit{position:absolute;top:8px;right:10px;font-size:12px}
-#ground{position:absolute;bottom:60px;width:100%;height:4px;background:#9bbc0f}
-#player{position:absolute;left:70px;bottom:64px;font-size:40px}
-.obs{position:absolute;bottom:64px;font-size:24px}
-#hud{position:absolute;left:10px;top:10px}
-#msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;background:rgba(15,56,15,.9);padding:30px}
-.hidden{display:none!important}
-#letter{position:absolute;inset:25px;background:#e8f8c8;color:#203820;border:4px solid #203820;padding:18px;overflow:auto}
-#hearts{position:absolute;inset:0;pointer-events:none}
-.heart{position:absolute;animation:fall 4s linear forwards}
-@keyframes fall{from{transform:translateY(-20px)}to{transform:translateY(430px)}}
-</style>
-</head>
-<body>
-<div id="game">
-<div id="credit">made by mo, the love of your life ❤️</div>
-<div id="hud">Obstacles: <span id="count">0</span>/3</div>
-<div id="ground"></div>
-<div id="player">👰</div>
-<div id="hearts"></div>
-<div id="msg">Press <b>SPACE</b> to start.<br><br>Jump over: 💸 Loans, 😔 Stress, 🌧 Bad Days.</div>
-<div id="letter" class="hidden">
-<h2>💍 You caught him!</h2>
-<p>He smiles, places a wedding ring in your hand, and gives you a letter.</p>
-<p><b>My love,</b></p>
-<p>I know life has felt heavy lately. The loans, the stress, and the endless thoughts can make every day feel harder than it should.</p>
-<p>But just like you jumped over every obstacle in this little game, you'll get through these too. They are challenges, not your future.</p>
-<p>You are loved, you are stronger than you realize, and you never have to face any of this alone.</p>
-<p>One day we'll look back on these difficult moments and be grateful we kept moving forward together.</p>
-<p><b>I love you endlessly.</b></p>
-<p>Forever yours,<br><b>Mo ❤️</b></p>
-</div>
-</div>
-<script>
-const game=document.getElementById('game'),player=document.getElementById('player'),msg=document.getElementById('msg');
-const hearts=document.getElementById('hearts'),letter=document.getElementById('letter');
-let started=false,jumping=false,vy=0,y=64,count=0,won=false;
-const labels=["💸 Loans","😔 Stress","🌧 Bad Days"];
-let obs=null;
-function spawn(){
- if(count>=3)return;
- obs=document.createElement('div');obs.className='obs';obs.textContent=labels[count];
- obs.style.left='760px';game.appendChild(obs);
+Now the styles. I'll rewrite styles.css to add the Game Boy design system.
+src/styles.css
+  }
 }
-function jump(){if(!jumping){jumping=true;vy=13;}}
-function endWin(){
- won=true;
- if(obs)obs.remove();
- msg.classList.remove('hidden');
- msg.innerHTML="🏃‍♂️ A mysterious man appears holding 💍 and 💌... She catches him!";
- setTimeout(()=>{
-   msg.classList.add('hidden');
-   letter.classList.remove('hidden');
-   for(let i=0;i<60;i++){
-      let h=document.createElement('div');
-      h.className='heart';h.textContent='💖';
-      h.style.left=(Math.random()*760)+'px';
-      h.style.animationDelay=(Math.random()*2)+'s';
-      hearts.appendChild(h);
-   }
- },1800);
+/* ===========================================================
+   LOVE BOY — Game Boy love story styles
+   =========================================================== */
+:root {
+  --gb-screen-0: #0f380f; /* darkest */
+  --gb-screen-1: #306230;
+  --gb-screen-2: #8bac0f;
+  --gb-screen-3: #9bbc0f; /* lightest */
+  --gb-case: #c9c4bb;
+  --gb-case-shadow: #7a7368;
+  --gb-accent: #b91c4a;
+  --gb-btn: #7d1f45;
+  --gb-dpad: #2a2a2a;
+  --gb-pill: #6e6a63;
 }
-document.addEventListener('keydown',e=>{
- if(e.code==="Space"){
-   e.preventDefault();
-   if(!started){started=true;msg.classList.add('hidden');spawn();}
-   else if(!won)jump();
- }
-});
-function loop(){
- requestAnimationFrame(loop);
- if(!started||won)return;
- if(jumping){
-   y+=vy;vy-=0.7;
-   if(y<=64){y=64;jumping=false;vy=0;}
-   player.style.bottom=y+"px";
- }
- if(obs){
-   let x=parseFloat(obs.style.left);x-=5;obs.style.left=x+"px";
-   if(x<110&&x>50&&y<95){
-      started=false;
-      msg.classList.remove('hidden');
-      msg.innerHTML="💚 Bad days happen...<br><br>Press SPACE to try again.";
-      if(obs)obs.remove();obs=null;count=0;document.getElementById('count').textContent=0;
-      y=64;player.style.bottom="64px";
-      return;
-   }
-   if(x<-120){
-      obs.remove();obs=null;
-      count++;document.getElementById('count').textContent=count;
-      if(count===3) endWin(); else spawn();
-   }
- }
+@font-face {
+  font-family: "PressStart";
+  src: local("Press Start 2P");
+  font-display: swap;
 }
-loop();
-</script>
-</body>
-</html>
-""")
+.gb-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 20% 10%, #ffd4de 0%, transparent 40%),
+    radial-gradient(circle at 80% 90%, #d4e4ff 0%, transparent 45%),
+    linear-gradient(180deg, #ffe6ec 0%, #fff5d1 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  gap: 16px;
+  font-family: "Press Start 2P", "PressStart", "Courier New", monospace;
+}
+.gb-device {
+  width: min(560px, 100%);
+  background: linear-gradient(180deg, #dcd6cc 0%, var(--gb-case) 60%, #b8b2a7 100%);
+  border-radius: 18px 18px 60px 18px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -6px 0 rgba(0, 0, 0, 0.15),
+    0 20px 40px rgba(0, 0, 0, 0.25);
+  padding: 22px 22px 32px;
+  position: relative;
+}
+.gb-brand {
+  font-size: 10px;
+  color: #4a4a4a;
+  letter-spacing: 1px;
+  padding: 4px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+.gb-brand-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gb-accent);
+  display: inline-block;
+}
+.gb-brand-sub { color: var(--gb-accent); font-size: 9px; }
+.gb-screen-frame {
+  background: #4b4a45;
+  border-radius: 12px 12px 40px 12px;
+  padding: 22px 22px 28px;
+  box-shadow:
+    inset 0 3px 0 rgba(0,0,0,0.4),
+    inset 0 -2px 0 rgba(255,255,255,0.05);
+  position: relative;
+}
+.gb-power {
+  position: absolute;
+  top: 26px; left: 16px;
+  font-size: 8px;
+  color: #c9c4bb;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 4px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.gb-led {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #ff3b3b;
+  box-shadow: 0 0 6px #ff3b3b;
+}
+.gb-screen {
+  aspect-ratio: 480 / 240;
+  background: var(--gb-screen-3);
+  border: 2px solid #1a1a1a;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  image-rendering: pixelated;
+  color: var(--gb-screen-0);
+  margin-left: 26px;
+}
+.gb-screen-label {
+  color: var(--gb-accent);
+  font-size: 8px;
+  text-align: center;
+  margin-top: 10px;
+  margin-left: 26px;
+  letter-spacing: 2px;
+}
+.gb-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding: 0 8px;
+}
+.gb-dpad {
+  position: relative;
+  width: 84px; height: 84px;
+}
+.gb-dpad-v, .gb-dpad-h {
+  position: absolute;
+  background: var(--gb-dpad);
+  border-radius: 4px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.08);
+}
+.gb-dpad-v { width: 28px; height: 84px; left: 28px; top: 0; }
+.gb-dpad-h { width: 84px; height: 28px; top: 28px; left: 0; }
+.gb-ab { display: flex; gap: 14px; transform: rotate(-25deg); }
+.gb-btn {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--gb-btn);
+  color: #fff;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow:
+    inset 0 -4px 0 rgba(0,0,0,0.35),
+    inset 0 2px 0 rgba(255,255,255,0.15),
+    0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.08s ease;
+}
+.gb-btn:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.35); }
+.gb-startsel {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 22px;
+  transform: rotate(-25deg);
+}
+.gb-pill {
+  background: var(--gb-pill);
+  color: #eee;
+  border: none;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 7px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4);
+}
+.gb-speaker {
+  position: absolute;
+  bottom: 20px; right: 22px;
+  display: grid;
+  grid-template-columns: repeat(6, 4px);
+  gap: 6px;
+  transform: rotate(-25deg);
+}
+.gb-speaker span {
+  width: 4px; height: 42px;
+  background: #7a7368;
+  border-radius: 2px;
+}
+.gb-hint {
+  font-family: "Press Start 2P", "PressStart", monospace;
+  font-size: 9px;
+  color: #6b3a4b;
+  letter-spacing: 1px;
+  text-align: center;
+}
+/* ---------- Scenes ---------- */
+.scene {
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.scene-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+}
+.pixel-title {
+  font-size: 14px;
+  color: var(--gb-screen-0);
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 var(--gb-screen-1);
+  animation: gb-blink 2.4s steps(2) infinite;
+}
+.pixel-lines p { margin: 0; color: var(--gb-screen-0); font-size: 9px; }
+.pixel-accent { color: var(--gb-screen-1); }
+.pixel-press {
+  margin-top: 12px;
+  font-size: 8px;
+  color: var(--gb-screen-1);
+  animation: gb-blink 1s steps(2) infinite;
+}
+@keyframes gb-blink {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.35; }
+}
+/* Game scene */
+.scene-game { padding: 0; }
+.hud {
+  position: absolute;
+  top: 8px; left: 10px;
+  font-size: 8px;
+  color: var(--gb-screen-0);
+  background: var(--gb-screen-3);
+  padding: 2px 6px;
+  border: 1px solid var(--gb-screen-0);
+  z-index: 5;
+}
+.ground {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 16.6%; /* (240-200)/240 */
+  background:
+    repeating-linear-gradient(90deg, var(--gb-screen-1) 0 6px, var(--gb-screen-0) 6px 8px);
+}
+.ground-line {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 16.6%;
+  height: 2px;
+  background: var(--gb-screen-0);
+}
+.cloud {
+  position: absolute;
+  width: 40px; height: 12px;
+  background: var(--gb-screen-2);
+  border-radius: 8px;
+  box-shadow:
+    12px -6px 0 -2px var(--gb-screen-2),
+    -10px -4px 0 -3px var(--gb-screen-2);
+  opacity: 0.7;
+  animation: cloud-drift 12s linear infinite;
+}
+.cloud-a { top: 20px; left: 20%; }
+.cloud-b { top: 40px; left: 70%; animation-duration: 18s; }
+@keyframes cloud-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-120%); }
+}
+.sprite {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 28px;
+  filter: drop-shadow(1px 1px 0 var(--gb-screen-0));
+  line-height: 1;
+}
+.bride {
+  animation: bride-bob 0.4s steps(2) infinite;
+}
+@keyframes bride-bob {
+  0% { transform: translate(-50%, 0); }
+  100% { transform: translate(-50%, -2px); }
+}
+.obstacle {
+  position: absolute;
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.obstacle-emoji {
+  font-size: 22px;
+  filter: drop-shadow(1px 1px 0 var(--gb-screen-0));
+}
+.obstacle-label {
+  font-size: 7px;
+  color: var(--gb-screen-0);
+  background: var(--gb-screen-3);
+  border: 1px solid var(--gb-screen-0);
+  padding: 1px 3px;
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+.groom {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.groom-body { font-size: 28px; }
+.ring {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.ring-sparkle {
+  animation: ring-sparkle 0.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 4px #fff);
+}
+@keyframes ring-sparkle {
+  from { transform: scale(1); filter: drop-shadow(0 0 2px #fff); }
+  to { transform: scale(1.4); filter: drop-shadow(0 0 8px #fffbcc); }
+}
+.letter-icon { font-size: 12px; margin-bottom: 20px; }
+.sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sparkles span {
+  position: absolute;
+  color: #fffbcc;
+  font-size: 12px;
+  animation: sparkle 1.2s ease-in-out infinite;
+  text-shadow: 0 0 4px #fff;
+}
+.sparkles span:nth-child(1) { left: 35%; top: 40%; animation-delay: 0s; }
+.sparkles span:nth-child(2) { left: 50%; top: 30%; animation-delay: 0.2s; }
+.sparkles span:nth-child(3) { left: 60%; top: 45%; animation-delay: 0.4s; }
+.sparkles span:nth-child(4) { left: 45%; top: 55%; animation-delay: 0.6s; }
+.sparkles span:nth-child(5) { left: 55%; top: 20%; animation-delay: 0.8s; }
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+/* Letter scene */
+.scene-letter {
+  background: linear-gradient(180deg, var(--gb-screen-3) 0%, var(--gb-screen-2) 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.envelope {
+  position: relative;
+  width: 92%;
+  height: 90%;
+  background: #fff5f7;
+  border: 2px solid var(--gb-screen-0);
+  box-shadow: 3px 3px 0 var(--gb-screen-0);
+  overflow: hidden;
+  border-radius: 3px;
+}
+.envelope-flap {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, #ffc9d4 0%, #ff9fb3 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top center;
+  transition: transform 0.9s cubic-bezier(0.7, -0.2, 0.3, 1.4);
+  z-index: 3;
+  border-bottom: 2px solid var(--gb-screen-0);
+}
+.envelope-open .envelope-flap {
+  transform: rotateX(180deg) translateY(-2px);
+}
+.letter-paper {
+  position: absolute;
+  inset: 6px;
+  background: #fffef7;
+  border: 1px solid #d9c9a0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  transform: translateY(20%);
+  opacity: 0;
+  transition: transform 0.9s ease 0.6s, opacity 0.6s ease 0.6s;
+  z-index: 2;
+}
+.letter-paper-show {
+  transform: translateY(0);
+  opacity: 1;
+}
+.letter-inner {
+  font-family: "Georgia", "Times New Roman", serif;
+  color: #3a2a2a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.letter-inner h2 {
+  font-family: "Press Start 2P", "PressStart", monospace;
+  font-size: 10px;
+  color: var(--gb-accent);
+  text-align: center;
+  margin: 0 0 8px;
+}
+.letter-inner p { margin: 0 0 8px; }
+.letter-inner em { color: var(--gb-accent); font-style: italic; }
+.letter-heart { text-align: center; font-size: 18px; margin: 10px 0 !important; }
+.letter-sign { text-align: right; font-style: italic; }
+.letter-sign strong { font-family: "Press Start 2P", "PressStart", monospace; font-size: 10px; color: var(--gb-accent); font-style: normal; }
+/* Floating hearts + notes */
+.hearts, .notes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 4;
+}
+.heart {
+  position: absolute;
+  bottom: -20px;
+  color: var(--gb-accent);
+  animation: heart-float linear infinite;
+  text-shadow: 1px 1px 0 var(--gb-screen-0);
+}
+@keyframes heart-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-260px) scale(1.1); opacity: 0; }
+}
+.note {
+  position: absolute;
+  top: 70%;
+  font-size: 14px;
+  color: var(--gb-screen-0);
+  animation: note-float 3.5s ease-in infinite;
+}
+@keyframes note-float {
+  0% { transform: translateY(0) rotate(-10deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-180px) rotate(15deg); opacity: 0; }
+}
+@media (max-width: 520px) {
+  .gb-device { padding: 16px 14px 24px; }
+  .gb-screen { margin-left: 20px; }
+  .gb-btn { width: 44px; height: 44px; }
+  .gb-dpad { width: 68px; height: 68px; }
+  .gb-dpad-v { width: 22px; height: 68px; left: 23px; }
+  .gb-dpad-h { width: 68px; height: 22px; top: 23px; }
+  .letter-inner { font-size: 10px; }
+}
 
-path="/mnt/data/love-game.html"
-with open(path,"w",encoding="utf-8") as f:
-    f.write(html)
-print(path)
